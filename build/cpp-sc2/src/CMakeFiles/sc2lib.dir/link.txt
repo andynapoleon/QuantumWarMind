@@ -1,0 +1,2 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../bin/libsc2lib.a CMakeFiles/sc2lib.dir/sc2lib/sc2_search.cc.o CMakeFiles/sc2lib.dir/sc2lib/sc2_utils.cc.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib ../bin/libsc2lib.a
