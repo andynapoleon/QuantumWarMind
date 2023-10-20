@@ -1,2 +1,0 @@
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../bin/libsc2utils.a CMakeFiles/sc2utils.dir/sc2utils/sc2_arg_parser.cc.o CMakeFiles/sc2utils.dir/sc2utils/sc2_manage_process.cc.o CMakeFiles/sc2utils.dir/sc2utils/sc2_property_reader.cc.o CMakeFiles/sc2utils.dir/sc2utils/sc2_scan_directory.cc.o
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib ../bin/libsc2utils.a
