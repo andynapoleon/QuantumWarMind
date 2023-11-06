@@ -25,6 +25,9 @@ int main(int argc, char* argv[]) {
     coordinator.LaunchStarcraft();
     coordinator.StartGame(sc2::kMapBelShirVestigeLE);
 
-    while (coordinator.Update()){}
+    while (coordinator.Update()){
+        // Slowing down gamespeed so i can see whats happening
+        sc2::SleepFor(15);
+    }
     return 0;
 }
