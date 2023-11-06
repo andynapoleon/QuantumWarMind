@@ -10,19 +10,21 @@
 // LadderInterface allows the bot to be tested against the built-in AI or
 // played against other bots
 int main(int argc, char* argv[]) {
-	//RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Terran);
-	Coordinator coordinator;
+    //RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Terran);
+    Coordinator coordinator;
     coordinator.LoadSettings(argc, argv);
+    coordinator.SetFullScreen(false);
+    coordinator.SetRealtime(false);
  
     BasicSc2Bot bot;
     coordinator.SetParticipants({
-        CreateParticipant(Race::Terran, &bot),
-        CreateComputer(Race::Zerg)
+        CreateParticipant(Race::Zerg, &bot),
+        CreateComputer(Race::Terran)
     });
-    
+
     coordinator.LaunchStarcraft();
     coordinator.StartGame(sc2::kMapBelShirVestigeLE);
 
-	while (coordinator.Update()){}
-	return 0;
+    while (coordinator.Update()){}
+    return 0;
 }
