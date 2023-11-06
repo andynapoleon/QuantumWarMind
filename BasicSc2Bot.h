@@ -19,7 +19,7 @@ public:
     virtual void OnUnitIdle(const Unit* unit) final;
 
 private:
-    bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
+    bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
     // bool TryBuildSupplyDepot();
     // bool TryBuildBarracks();
     void TryBuildExtractor();
@@ -27,7 +27,9 @@ private:
     const Unit* FindNearestMineralPatch(const Point2D& start);
     
     size_t CountUnitType(UNIT_TYPEID unit_type);
-    Point2D FindBuildLocation();
+    size_t CountEggUnitsInProduction(ABILITY_ID unit_ability);
+    Point2D FindBuildLocation(ABILITY_ID unit_ability);
+    const Unit* FindNearestExtractor(ABILITY_ID unit_ability);
 };
 
 #endif
