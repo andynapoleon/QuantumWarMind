@@ -4,6 +4,7 @@
     "forward_list": "cpp",
     "list": "cpp",
     "regex": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "iostream": "cpp"
   }
 }

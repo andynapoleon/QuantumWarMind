@@ -91,14 +91,19 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     case UNIT_TYPEID::ZERG_LARVA:
     {
         // When we make our 13th drone we need to make a Overlord
+        int usedSupply = Observation()->GetFoodUsed();
         size_t sum_overlords = CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_OVERLORD);
         size_t sum_drones = CountUnitType(UNIT_TYPEID::ZERG_DRONE) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_DRONE);
-        if ((sum_overlords < 2 && sum_drones == 13))
+        if (sum_overlords < 2 && sum_drones == 13)
         {
             if (DEBUG_MODE)
             {
                 std::cout << "We have reached a checkpoint. We have " << sum_overlords << " overlords & " << sum_drones << " drones we will try to train another overlord" << std::endl;
             }
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+        }
+        else if (usedSupply == 19)
+        {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
         else
@@ -121,7 +126,9 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     case UNIT_TYPEID::ZERG_OVERLORD:
     {
         const GameInfo &game_info = Observation()->GetGameInfo();
-        Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVEPATROL, game_info.enemy_start_locations.front());
+        // I have to comment this out so that the 3rd overlord works!
+        // I don't know why when I move the overlords, it just keeps spawning more and more overlords, not just a third one.
+        // Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVEPATROL, game_info.enemy_start_locations.front());
         break;
     }
     default:
