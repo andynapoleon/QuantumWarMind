@@ -28,12 +28,13 @@ private:
     const Unit *FindNearestMineralPatch(const Point2D &start);
 
     size_t CountUnitType(UNIT_TYPEID unit_type);
+    size_t NumFullyMade(UNIT_TYPEID unit_type);
     size_t CountEggUnitsInProduction(ABILITY_ID unit_ability);
     Point2D FindNearestBuildLocation(sc2::UNIT_TYPEID type_);
     const Unit *FindNearestExtractor(ABILITY_ID unit_ability);
     int GetQueensInQueue(const sc2::Unit *hatchery);
     std::vector<const sc2::Unit *> GetMineralGatheringDrones();
-    bool IsExtractorBeingHarvested(const sc2::Unit *extractor);
+    
 };
 
 #endif
