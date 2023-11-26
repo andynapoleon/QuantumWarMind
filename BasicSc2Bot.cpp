@@ -98,7 +98,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             if (DEBUG_MODE)
             {
-                //std::cout << "We have reached a checkpoint. We have " << sum_overlords << " overlords & " << sum_drones << " drones we will try to train another overlord" << std::endl;
+                // std::cout << "We have reached a checkpoint. We have " << sum_overlords << " overlords & " << sum_drones << " drones we will try to train another overlord" << std::endl;
             }
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
@@ -128,7 +128,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         const GameInfo &game_info = Observation()->GetGameInfo();
         // I have to comment this out so that the 3rd overlord works!
         // I don't know why when I move the overlords, it just keeps spawning more and more overlords, not just a third one.
-        // Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVEPATROL, game_info.enemy_start_locations.front());
+        Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVEPATROL, game_info.enemy_start_locations.front());
         break;
     }
     default:
@@ -204,8 +204,10 @@ void BasicSc2Bot::TryCreateZergQueen()
 {
     const Units &hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     bool making_queen = false;
-    for (const auto& hatchery : hatcheries) {
-        if (GetQueensInQueue(hatchery) > 0) {
+    for (const auto &hatchery : hatcheries)
+    {
+        if (GetQueensInQueue(hatchery) > 0)
+        {
             making_queen = true;
         }
     }
@@ -220,7 +222,7 @@ void BasicSc2Bot::TryCreateZergQueen()
 
 void BasicSc2Bot::TryFillGasExtractor()
 {
-    
+
     std::vector<const sc2::Unit *> mineralGatheringDrones = GetMineralGatheringDrones();
     const Units &extractors = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_EXTRACTOR));
     for (const auto &extractor : extractors)
@@ -230,11 +232,14 @@ void BasicSc2Bot::TryFillGasExtractor()
             return;
         }
 
-        if (DEBUG_MODE) { std::cout << "Attempting to fill gas extractor: " << extractor->tag << std::endl; }
-        int max_drones = extractor->ideal_harvesters; // we only ever need 3 drones to fill an extractor to max capacity
-        while(max_drones > 0)
+        if (DEBUG_MODE)
         {
-            const auto& drone = mineralGatheringDrones.back();
+            std::cout << "Attempting to fill gas extractor: " << extractor->tag << std::endl;
+        }
+        int max_drones = extractor->ideal_harvesters; // we only ever need 3 drones to fill an extractor to max capacity
+        while (max_drones > 0)
+        {
+            const auto &drone = mineralGatheringDrones.back();
             sc2::ActionInterface *actions = Actions();
             actions->UnitCommand(drone, sc2::ABILITY_ID::HARVEST_GATHER, extractor); // just send our first 3 drones in the list to go get gas
             --max_drones;
@@ -248,7 +253,6 @@ size_t BasicSc2Bot::CountUnitType(UNIT_TYPEID unit_type)
 {
     return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
-
 
 // helper function that counts number of a certain unit currently in production
 // takes in the name of the ability that makes the unit, ex ABILITY::TRAIN_OVERLORD
@@ -306,12 +310,11 @@ const Unit *BasicSc2Bot::FindNearestExtractor(ABILITY_ID unit_ability)
     const Unit *hatchery = units.front(); // Use the first Hatchery
 
     if (unit_ability == ABILITY_ID::BUILD_EXTRACTOR)
-    { // if we are trying to build an extractor we want the closest one
+    {
         const Units &geysers = Observation()->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
         const Unit *closest_geyser = geysers.front();
         for (const auto &geyser : geysers)
         {
-
             if (Distance3D(hatchery->pos, closest_geyser->pos) > Distance3D(hatchery->pos, geyser->pos))
             {
                 closest_geyser = geyser;
@@ -342,7 +345,7 @@ int BasicSc2Bot::GetQueensInQueue(const sc2::Unit *hatchery)
 std::vector<const sc2::Unit *> BasicSc2Bot::GetMineralGatheringDrones()
 {
     std::vector<const sc2::Unit *> mineralGatheringDrones;
-    std::vector<const sc2::Unit*> units = Observation()->GetUnits(sc2::Unit::Alliance::Self);
+    std::vector<const sc2::Unit *> units = Observation()->GetUnits(sc2::Unit::Alliance::Self);
 
     for (const auto &unit : units)
     {
@@ -354,6 +357,4 @@ std::vector<const sc2::Unit *> BasicSc2Bot::GetMineralGatheringDrones()
             }
         }
     }
-
     return mineralGatheringDrones;
-}
