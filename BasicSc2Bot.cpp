@@ -358,3 +358,4 @@ std::vector<const sc2::Unit *> BasicSc2Bot::GetMineralGatheringDrones()
         }
     }
     return mineralGatheringDrones;
+}
