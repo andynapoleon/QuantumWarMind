@@ -19,14 +19,17 @@ public:
     virtual void OnUnitIdle(const Unit *unit) final;
 
 private:
-    bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
+    // Private game-loop functions
     void TryBuildExtractor();
     void TryBuildSpawningPool();
     void TryBuildHatchery();
+    void TryNaturallyExpand();
     void TryCreateZergQueen();
     void TryFillGasExtractor();
-    const Unit *FindNearestMineralPatch(const Point2D &start);
 
+    // Private helper functions
+    bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
+    const Unit *FindNearestMineralPatch(const Point2D &start);
     size_t CountUnitType(UNIT_TYPEID unit_type);
     size_t NumFullyMade(UNIT_TYPEID unit_type);
     size_t CountEggUnitsInProduction(ABILITY_ID unit_ability);
@@ -34,6 +37,9 @@ private:
     const Unit *FindNearestExtractor(ABILITY_ID unit_ability);
     int GetQueensInQueue(const sc2::Unit *hatchery);
     std::vector<const sc2::Unit *> GetMineralGatheringDrones();
+    sc2::Point2D FindExpansionLocation();
+    float DistanceSquared2D(const sc2::Point2D &p1, const sc2::Point2D &p2);
+    const sc2::Unit *GetRandomElement(const std::vector<const sc2::Unit *> &elements);
 };
 
 #endif

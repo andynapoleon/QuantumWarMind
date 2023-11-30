@@ -24,6 +24,7 @@ void BasicSc2Bot::OnStep()
 {
     TryBuildExtractor();
     TryBuildSpawningPool();
+    TryNaturallyExpand();
     // TryCreateZergQueen();
     // TryFillGasExtractor();
 }
@@ -62,7 +63,8 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     case UNIT_TYPEID::ZERG_LARVA:
     {
         // Get the # of supply used and # of drones and overlords on field + in production
-        int usedSupply = Observation()->GetFoodUsed();
+        size_t usedSupply = Observation()->GetFoodUsed();
+
         size_t sum_overlords = CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_OVERLORD);
         size_t sum_drones = CountUnitType(UNIT_TYPEID::ZERG_DRONE) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_DRONE);
 
@@ -75,7 +77,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
-        else if (usedSupply < 17) // cap # of drones at 17
+        else if (sum_drones < 17) // cap # of drones at 17
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
         }
@@ -156,9 +158,22 @@ void BasicSc2Bot::TryBuildSpawningPool()
     TryBuildStructure(ABILITY_ID::BUILD_SPAWNINGPOOL);
 }
 
-// void BasicSc2Bot::TryExpandNewHatchery()
-// {
-// }
+void BasicSc2Bot::TryNaturallyExpand()
+{
+    const sc2::ObservationInterface *observation = Observation();
+    int usedSupply = Observation()->GetFoodUsed();
+
+    // Check if there's enough resources to expand & other conditions met
+    const int mineralsRequired = 300;
+    if (observation->GetMinerals() >= mineralsRequired && CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) == 1 && usedSupply == 17 && CountUnitType(UNIT_TYPEID::ZERG_HATCHERY) < 2)
+    {
+        // Issue a build command for the Hatchery at a valid expansion location.
+        TryBuildStructure(ABILITY_ID::BUILD_HATCHERY);
+    }
+
+    // Return if conditions not met
+    return;
+}
 
 void BasicSc2Bot::TryCreateZergQueen()
 {
@@ -215,7 +230,7 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
 {
     const ObservationInterface *observation = Observation();
 
-    // If a unit already is building a supply structure of this type, do nothing.
+    // If a unit already is building a supply structure of this type or is harvesting minerals, do nothing.
     // Also get an drone to build the structure.
     const Unit *unit_to_build = nullptr;
     Units units = observation->GetUnits(Unit::Alliance::Self);
@@ -231,11 +246,18 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
         if (unit->unit_type == unit_to_build_type)
         {
             unit_to_build = unit;
+            break;
         }
     }
+
+    // Build structure based on the structure type
     if (ability_type_for_structure == ABILITY_ID::BUILD_EXTRACTOR)
     {
         Actions()->UnitCommand(unit_to_build, ability_type_for_structure, FindNearestExtractor(ability_type_for_structure));
+    }
+    else if (ability_type_for_structure == ABILITY_ID::BUILD_HATCHERY)
+    {
+        Actions()->UnitCommand(unit_to_build, ability_type_for_structure, FindExpansionLocation());
     }
     else
     {
@@ -304,13 +326,11 @@ Point2D BasicSc2Bot::FindNearestBuildLocation(sc2::UNIT_TYPEID type_)
     const Unit *unit = units.front(); // Use the first units
 
     // Find a suitable location nearby the units
-    // You can use the position of the units to calculate the location
     Point2D buildLocation;
     float rx = GetRandomScalar();
     float ry = GetRandomScalar();
     buildLocation = Point2D(unit->pos.x + rx * 5.0f, unit->pos.y + ry * 5.0f); // Example: Build 3 units to the right of the Hatchery
 
-    // You should add more logic to check if the build location is valid, such as ensuring it's on creep or open ground.
     if (DEBUG_MODE)
     {
         std::cout << "We will build at (" << buildLocation.x << "," << buildLocation.y << ")" << std::endl;
@@ -338,6 +358,8 @@ const Unit *BasicSc2Bot::FindNearestExtractor(ABILITY_ID unit_ability)
         }
         return closest_geyser;
     }
+
+    return nullptr;
 }
 
 int BasicSc2Bot::GetQueensInQueue(const sc2::Unit *hatchery)
@@ -374,4 +396,63 @@ std::vector<const sc2::Unit *> BasicSc2Bot::GetMineralGatheringDrones()
         }
     }
     return mineralGatheringDrones;
+}
+
+/* This function filters out mineral patches that are too close to the main base to ensure a reasonable distance between bases. */
+sc2::Point2D BasicSc2Bot::FindExpansionLocation()
+{
+    const sc2::ObservationInterface *observation = Observation();
+    const sc2::GameInfo &gameInfo = observation->GetGameInfo();
+
+    // Get main base location.
+    const sc2::Point2D mainBaseLocation = observation->GetStartLocation();
+
+    // Get all mineral patches on the map.
+    const sc2::Units mineralPatches = observation->GetUnits(sc2::Unit::Alliance::Neutral, sc2::IsUnit(sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD));
+
+    // Filter out mineral patches that are too close to the main base.
+    const float minDistanceSquared = 10.0f;
+    std::vector<const sc2::Unit *> validMineralPatches;
+
+    for (const auto &mineralPatch : mineralPatches)
+    {
+        if (DistanceSquared2D(mineralPatch->pos, mainBaseLocation) > minDistanceSquared)
+        {
+            validMineralPatches.push_back(mineralPatch);
+        }
+    }
+
+    // Randomly select a valid mineral patch as near the expansion location.
+    if (!validMineralPatches.empty())
+    {
+        const sc2::Unit *selectedMineralPatch = GetRandomElement(validMineralPatches);
+
+        // Calculate the buildable location by adding an offset to the target location.
+        float rx = GetRandomScalar();
+        float ry = GetRandomScalar();
+        sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 5.0f, selectedMineralPatch->pos.y + ry * 5.0f);
+
+        return build_location;
+    }
+
+    // If no suitable mineral patch is found, return the main base location.
+    return mainBaseLocation;
+}
+
+/* This function calculates the squared distance between two points. */
+float BasicSc2Bot::DistanceSquared2D(const sc2::Point2D &p1, const sc2::Point2D &p2)
+{
+    return pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2);
+}
+
+/* This function returns a random element from a vector, used to randomly select a mineral patch from the valid options. */
+const sc2::Unit *BasicSc2Bot::GetRandomElement(const std::vector<const sc2::Unit *> &elements)
+{
+    if (elements.empty())
+    {
+        return nullptr;
+    }
+
+    const int randomIndex = rand() % elements.size();
+    return elements[randomIndex];
 }
