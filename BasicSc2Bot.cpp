@@ -25,8 +25,8 @@ void BasicSc2Bot::OnStep()
     TryBuildExtractor();
     TryBuildSpawningPool();
     TryNaturallyExpand();
-    // TryCreateZergQueen();
-    // TryFillGasExtractor();
+    TryFillGasExtractor();
+    TryCreateZergQueen();
 }
 
 void BasicSc2Bot::OnUnitCreated(const Unit *unit)
@@ -77,7 +77,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
-        else if (sum_drones < 17) // cap # of drones at 17
+        else if (usedSupply < 17) // cap # of drones at 17
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
         }
@@ -168,11 +168,41 @@ void BasicSc2Bot::TryNaturallyExpand()
     if (observation->GetMinerals() >= mineralsRequired && CountUnitType(UNIT_TYPEID::ZERG_SPAWNINGPOOL) == 1 && usedSupply == 17 && CountUnitType(UNIT_TYPEID::ZERG_HATCHERY) < 2)
     {
         // Issue a build command for the Hatchery at a valid expansion location.
+        if (DEBUG_MODE)
+        {
+            cout << "We have reached a checkpoint. We will try to build another hatchery at a natural expansion." << endl;
+        }
         TryBuildStructure(ABILITY_ID::BUILD_HATCHERY);
     }
 
     // Return if conditions not met
     return;
+}
+
+void BasicSc2Bot::TryFillGasExtractor()
+{
+    std::vector<const sc2::Unit *> mineralGatheringDrones = GetMineralGatheringDrones();
+    const Units &extractors = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_EXTRACTOR));
+    for (const auto &extractor : extractors)
+    {
+        if (!extractor || extractor->build_progress < 1.0f || extractor->assigned_harvesters > 0)
+        {
+            return;
+        }
+        if (DEBUG_MODE)
+        {
+            std::cout << "Attempting to fill gas extractor: " << extractor->tag << std::endl;
+        }
+        int max_drones = extractor->ideal_harvesters; // we only ever need 3 drones to fill an extractor to max capacity
+        while (max_drones > 0)
+        {
+            const auto &drone = mineralGatheringDrones.back();
+            sc2::ActionInterface *actions = Actions();
+            actions->UnitCommand(drone, sc2::ABILITY_ID::HARVEST_GATHER, extractor); // just send our first 3 drones in the list to go get gas
+            --max_drones;
+            mineralGatheringDrones.pop_back();
+        }
+    }
 }
 
 void BasicSc2Bot::TryCreateZergQueen()
@@ -191,33 +221,6 @@ void BasicSc2Bot::TryCreateZergQueen()
         !making_queen)
     {
         Actions()->UnitCommand(hatcheries.front(), sc2::ABILITY_ID::TRAIN_QUEEN);
-    }
-}
-
-void BasicSc2Bot::TryFillGasExtractor()
-{
-    std::vector<const sc2::Unit *> mineralGatheringDrones = GetMineralGatheringDrones();
-    const Units &extractors = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_EXTRACTOR));
-    for (const auto &extractor : extractors)
-    {
-        if (!extractor || extractor->build_progress < 1.0f || extractor->assigned_harvesters > 0)
-        {
-            return;
-        }
-
-        if (DEBUG_MODE)
-        {
-            std::cout << "Attempting to fill gas extractor: " << extractor->tag << std::endl;
-        }
-        int max_drones = extractor->ideal_harvesters; // we only ever need 3 drones to fill an extractor to max capacity
-        while (max_drones > 0)
-        {
-            const auto &drone = mineralGatheringDrones.back();
-            sc2::ActionInterface *actions = Actions();
-            actions->UnitCommand(drone, sc2::ABILITY_ID::HARVEST_GATHER, extractor); // just send our first 3 drones in the list to go get gas
-            --max_drones;
-            mineralGatheringDrones.pop_back();
-        }
     }
 }
 
@@ -410,13 +413,14 @@ sc2::Point2D BasicSc2Bot::FindExpansionLocation()
     // Get all mineral patches on the map.
     const sc2::Units mineralPatches = observation->GetUnits(sc2::Unit::Alliance::Neutral, sc2::IsUnit(sc2::UNIT_TYPEID::NEUTRAL_MINERALFIELD));
 
-    // Filter out mineral patches that are too close to the main base.
+    // Filter out mineral patches that are too close to or too far from the main base.
     const float minDistanceSquared = 10.0f;
+    const float maxDistanceSquared = 1000.0f;
     std::vector<const sc2::Unit *> validMineralPatches;
-
     for (const auto &mineralPatch : mineralPatches)
     {
-        if (DistanceSquared2D(mineralPatch->pos, mainBaseLocation) > minDistanceSquared)
+        float distance = DistanceSquared2D(mineralPatch->pos, mainBaseLocation);
+        if (distance > minDistanceSquared && distance < maxDistanceSquared)
         {
             validMineralPatches.push_back(mineralPatch);
         }
@@ -430,7 +434,7 @@ sc2::Point2D BasicSc2Bot::FindExpansionLocation()
         // Calculate the buildable location by adding an offset to the target location.
         float rx = GetRandomScalar();
         float ry = GetRandomScalar();
-        sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 5.0f, selectedMineralPatch->pos.y + ry * 5.0f);
+        sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 10.0f, selectedMineralPatch->pos.y + ry * 10.0f);
 
         return build_location;
     }
@@ -452,7 +456,6 @@ const sc2::Unit *BasicSc2Bot::GetRandomElement(const std::vector<const sc2::Unit
     {
         return nullptr;
     }
-
     const int randomIndex = rand() % elements.size();
     return elements[randomIndex];
 }

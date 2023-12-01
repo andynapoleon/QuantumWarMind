@@ -7,8 +7,6 @@
 #include "BasicSc2Bot.h"
 #include "LadderInterface.h"
 
-// LadderInterface allows the bot to be tested against the built-in AI or
-// played against other bots
 int main(int argc, char *argv[])
 {
     // RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Terran);
@@ -26,8 +24,8 @@ int main(int argc, char *argv[])
 
     while (coordinator.Update())
     {
-        // Slowing down gamespeed so i can see whats happening
-        sc2::SleepFor(15);
+        // Slowing down gamespeed so I can see what's happening
+        // sc2::SleepFor(15);
     }
     return 0;
 }
