@@ -22,7 +22,6 @@ private:
     // Private game-loop functions
     void TryBuildExtractor();
     void TryBuildSpawningPool();
-    void TryBuildHatchery();
     void TryNaturallyExpand();
     void TryCreateZergQueen();
     void TryFillGasExtractor();
