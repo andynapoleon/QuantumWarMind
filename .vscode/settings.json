@@ -5,6 +5,10 @@
     "list": "cpp",
     "regex": "cpp",
     "vector": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "ostream": "cpp",
+    "array": "cpp",
+    "tuple": "cpp",
+    "variant": "cpp"
   }
 }
