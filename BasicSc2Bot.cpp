@@ -30,6 +30,7 @@ void BasicSc2Bot::OnStep()
     TryFillGasExtractor();
     TryCreateZergQueen();
     TryResearchMetabolicBoost();
+    SpamZerglings();
 }
 
 /* This function is called when a new unit is created. */
@@ -85,6 +86,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
         }
+        SpamZerglings();
         break;
     }
     case UNIT_TYPEID::ZERG_DRONE:
@@ -286,6 +288,37 @@ void BasicSc2Bot::TryResearchMetabolicBoost()
 
     return;
 }
+
+/* This function focuses on spamming Zerglings, making Overlords as necessary. */
+void BasicSc2Bot::SpamZerglings()
+{
+    // Get all larva units
+    const Units& larvae = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LARVA));
+
+    // Check if you have enough resources for a Zergling
+    int minerals = Observation()->GetMinerals();
+    int vespene = Observation()->GetVespene();
+
+    // Check the supply used and supply limit
+    int supplyUsed = Observation()->GetFoodUsed();
+    int supplyCap = Observation()->GetFoodCap();
+
+    // Loop through each larva to issue commands
+    for (const auto& larva : larvae)
+    {
+        // Check if we need an Overlord (if we're about to hit the supply cap)
+        if (supplyCap - supplyUsed < 2 && minerals >= 100)
+        {
+            Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
+            supplyUsed += 8; // Increment used supply assuming the Overlord will be made
+        }
+        else if (minerals >= 50) // Check if we have enough minerals for a Zergling
+        {
+            Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_ZERGLING);
+        }
+    }
+}
+
 
 /*
 ===========================================================================
