@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     while (coordinator.Update())
     {
         // Slowing down gamespeed so I can see what's happening
-        // sc2::SleepFor(5);
+        // sc2::SleepFor(15);
     }
     return 0;
 }
