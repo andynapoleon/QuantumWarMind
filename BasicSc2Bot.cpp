@@ -30,7 +30,9 @@ void BasicSc2Bot::OnStep()
     TryFillGasExtractor();
     TryCreateZergQueen();
     TryResearchMetabolicBoost();
-    //SpamZerglings();
+    SpamZerglings();
+    HandleQueens();
+    TryCreateOverlordAtSupply();
 }
 
 /* This function is called when a new unit is created. */
@@ -394,6 +396,24 @@ void BasicSc2Bot::HandleQueens()
         }
         
    
+    }
+}
+
+void BasicSc2Bot::TryCreateOverlordAtSupply()
+{
+    const int OVERLORD_SUPPLY_THRESHOLD = 30;
+    int currentSupply = Observation()->GetFoodUsed();
+    int supplyCap = Observation()->GetFoodCap();
+    int minerals = Observation()->GetMinerals();
+
+    // Check if current supply is at or exceeds the threshold and if supply cap allows for an Overlord
+    if (currentSupply >= OVERLORD_SUPPLY_THRESHOLD && currentSupply < supplyCap && minerals >= 100)
+    {
+        const Units& larvae = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LARVA));
+        if (!larvae.empty())
+        {
+            Actions()->UnitCommand(larvae.front(), ABILITY_ID::TRAIN_OVERLORD);
+        }
     }
 }
 

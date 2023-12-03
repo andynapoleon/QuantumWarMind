@@ -21,6 +21,9 @@ public:
 private:
     // Private variables
     bool isLingSpeedResearched = false;
+    std::vector<const Unit*> queens;
+    std::unordered_map<const Unit*, bool> queenHasInjected;
+    int queenCounter = 0;
 
     // Private game-loop functions
     void TryBuildExtractor();
@@ -30,6 +33,8 @@ private:
     void TryFillGasExtractor();
     void TryResearchMetabolicBoost();
     void SpamZerglings();
+    void HandleQueens();
+    void TryCreateOverlordAtSupply();
 
     // Private helper functions
     bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
@@ -45,7 +50,8 @@ private:
     float DistanceSquared2D(const sc2::Point2D &p1, const sc2::Point2D &p2);
     const sc2::Unit *GetRandomElement(const std::vector<const sc2::Unit *> &elements);
     const Unit *GetMainBaseHatcheryLocation();
-    void SpamZerglings();
+    void InjectLarvae(const Unit* queen, const Unit* hatchery);
+    bool IsAtMainBase(const Unit* unit);
 };
 
 #endif
