@@ -29,6 +29,7 @@ private:
     void TryCreateZergQueen();
     void TryFillGasExtractor();
     void TryResearchMetabolicBoost();
+    void SpamZerglings();
 
     // Private helper functions
     bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);

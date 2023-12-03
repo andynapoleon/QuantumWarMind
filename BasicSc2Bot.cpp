@@ -58,6 +58,13 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
         {
             std::cout << "Hatcher created with tag: " << unit->tag << std::endl;
         }
+        if (unit->unit_type == UNIT_TYPEID::ZERG_QUEEN)
+        {
+            std::cout << "Queen created with tag: " << unit->tag << std::endl; 
+            queens.push_back(unit);
+            queenHasInjected[unit] = false; // Initialize the queen's status
+            queenCounter++;  // Increment the queen counter
+        }
     }
 }
 
@@ -253,7 +260,7 @@ void BasicSc2Bot::TryCreateZergQueen()
     // Make two queens
     if (CountUnitType(sc2::UNIT_TYPEID::ZERG_SPAWNINGPOOL) > 0 &&
         CountUnitType(sc2::UNIT_TYPEID::ZERG_HATCHERY) > CountUnitType(sc2::UNIT_TYPEID::ZERG_QUEEN) &&
-        !makingQueen)
+        !makingQueen && Observation()->GetMinerals() >= 150)
     {
         Actions()->UnitCommand(mainHatchery, sc2::ABILITY_ID::TRAIN_QUEEN);
     }
@@ -318,6 +325,46 @@ void BasicSc2Bot::SpamZerglings()
         }
     }
 }
+
+void BasicSc2Bot::HandleQueens()
+{
+    const Units& hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+    if (hatcheries.empty() || hatcheries.size() < 2)
+    {
+        return; //EXIT if there are no hatcheries ans ensure there is a hatchery at both main and explansion
+    }
+
+    for (const auto& queen : queens)
+    {
+        if (queen->energy < 25)
+        {
+            continue; //skip if the queen doesnt have enough energy
+        }
+        
+        int queenIndex = std::distance(queens.begin(), std::find(queens.begin(), queens.end(), queen));
+        if (queenIndex == 0) //first queen
+        {
+            if (!queenHasInjected[queen]) 
+            {
+                InjectLarvae(queen, hatcheries.front());  // Inject at main base
+                queenHasInjected[queen] = true;
+                Actions()->UnitCommand(queen, ABILITY_ID::SMART, hatcheries[1]->pos);  // Move to expansion
+            }
+            else
+            {
+                InjectLarvae(queen, hatcheries[1]);  // Continue injecting at expansion
+            }
+            
+        }
+        else if (queenIndex == 1) //second queen 
+        {
+            InjectLarvae(queen, hatcheries.front());  // Always inject at main base
+        }
+        
+   
+    }
+}
+
 
 
 /*
@@ -579,4 +626,23 @@ const Unit *BasicSc2Bot::GetMainBaseHatcheryLocation()
 
     // Return a null
     return nullptr;
+}
+
+/* Helper function for injecting larvae */
+void BasicSc2Bot::InjectLarvae(const Unit* queen, const Unit* hatchery)
+{
+    Actions()->UnitCommand(queen, ABILITY_ID::EFFECT_INJECTLARVA, hatchery);
+}
+
+/* Checks it unit is near home base */
+bool BasicSc2Bot::IsAtMainBase(const Unit* unit)
+{
+    const float SOME_THRESHOLD = 7.5;
+    const Unit* mainHatchery = GetMainBaseHatcheryLocation();
+    if (!mainHatchery)
+    {
+        return false; 
+    }
+
+    return DistanceSquared2D(unit->pos, mainHatchery->pos) < SOME_THRESHOLD;
 }
