@@ -45,6 +45,7 @@ private:
     float DistanceSquared2D(const sc2::Point2D &p1, const sc2::Point2D &p2);
     const sc2::Unit *GetRandomElement(const std::vector<const sc2::Unit *> &elements);
     const Unit *GetMainBaseHatcheryLocation();
+    void SpamZerglings();
 };
 
 #endif
