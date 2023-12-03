@@ -24,6 +24,10 @@ private:
     std::vector<const Unit*> queens;
     std::unordered_map<const Unit*, bool> queenHasInjected;
     int queenCounter = 0;
+    Point2D enemy_base_estimate;
+
+    std::vector<const Unit*> hatcheries;
+
 
     // Private game-loop functions
     void TryBuildExtractor();
@@ -34,6 +38,7 @@ private:
     void TryResearchMetabolicBoost();
     void SpamZerglings();
     void HandleQueens();
+    void HandleZerglings();
     void TryCreateOverlordAtSupply();
 
     // Private helper functions

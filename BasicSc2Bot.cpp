@@ -20,6 +20,16 @@ void BasicSc2Bot::OnGameStart()
     {
         std::cout << "It's Gamin time" << std::endl;
     }
+    hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
+    Point2D map_center = FindCenterOfMap(Observation()->GetGameInfo());
+    Point2D start_location = Observation()->GetStartLocation();
+    Point2D dist_between = map_center - start_location;
+    enemy_base_estimate = map_center + dist_between;
+    if (DEBUG_MODE)
+    {
+        std::cout << "Our Base is at (" << start_location.x <<","<<start_location.y <<")"<< std::endl;
+        std::cout << "Enemy Base is at (" << enemy_base_estimate.x << "," << enemy_base_estimate.y << ")" << std::endl;
+    }
 }
 /* This function is called on each game step. */
 void BasicSc2Bot::OnStep()
@@ -30,9 +40,9 @@ void BasicSc2Bot::OnStep()
     TryFillGasExtractor();
     TryCreateZergQueen();
     TryResearchMetabolicBoost();
-    SpamZerglings();
     HandleQueens();
-    TryCreateOverlordAtSupply();
+    HandleZerglings();
+    //TryCreateOverlordAtSupply();
 }
 
 /* This function is called when a new unit is created. */
@@ -63,10 +73,17 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
         if (unit->unit_type == UNIT_TYPEID::ZERG_QUEEN)
         {
             std::cout << "Queen created with tag: " << unit->tag << std::endl; 
-            queens.push_back(unit);
-            queenHasInjected[unit] = false; // Initialize the queen's status
-            queenCounter++;  // Increment the queen counter
         }
+    }
+
+    if (unit->unit_type == UNIT_TYPEID::ZERG_QUEEN) {
+        queens.push_back(unit);
+        queenHasInjected[unit] = false; // Initialize the queen's status
+        queenCounter++;  // Increment the queen counter
+    }
+    if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY)
+    {
+        hatcheries.push_back(unit);
     }
 }
 
@@ -83,7 +100,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         size_t usedSupply = Observation()->GetFoodUsed();
         size_t sum_overlords = CountUnitType(UNIT_TYPEID::ZERG_OVERLORD) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_OVERLORD);
         size_t sum_drones = CountUnitType(UNIT_TYPEID::ZERG_DRONE) + CountEggUnitsInProduction(ABILITY_ID::TRAIN_DRONE);
-        const Units& hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
         for (const auto& hatchery : hatcheries)
         {
             sum_queens += GetQueensInQueue(hatchery);
@@ -102,10 +118,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         else if (sum_drones < 17) // cap # of drones at 17 during prep phase (before queens)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
-            if (DEBUG_MODE)
-            {
-                std::cout << "We have reached a checkpoint. We have " << sum_drones << " drones once we hit 17, we will not build anymore until the prep phase is over" << std::endl;
-            }
         }
 
         if(sum_queens >= 2) { SpamZerglings(); }
@@ -360,12 +372,13 @@ void BasicSc2Bot::SpamZerglings()
     }
 }
 
+/* This function handles the behaviour of our two queens */
 void BasicSc2Bot::HandleQueens()
 {
     const Units& hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     if (hatcheries.empty() || hatcheries.size() < 2)
     {
-        return; //EXIT if there are no hatcheries ans ensure there is a hatchery at both main and explansion
+        return; //EXIT if there are no hatcheries and ensure there is a hatchery at both main and explansion
     }
 
     for (const auto& queen : queens)
@@ -382,7 +395,7 @@ void BasicSc2Bot::HandleQueens()
             {
                 InjectLarvae(queen, hatcheries.front());  // Inject at main base
                 queenHasInjected[queen] = true;
-                Actions()->UnitCommand(queen, ABILITY_ID::SMART, hatcheries[1]->pos);  // Move to expansion
+                Actions()->UnitCommand(queen, ABILITY_ID::MOVE_MOVE, hatcheries[1]->pos);  // Move to expansion
             }
             else
             {
@@ -394,8 +407,24 @@ void BasicSc2Bot::HandleQueens()
         {
             InjectLarvae(queen, hatcheries.front());  // Always inject at main base
         }
-        
-   
+    }
+}
+
+void BasicSc2Bot::HandleZerglings() {
+    const Units& zerglings = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_ZERGLING));
+    const Units& enemy_units = Observation()->GetUnits(sc2::Unit::Alliance::Enemy);
+    if (isLingSpeedResearched && zerglings.size() > 50) {
+        if (!enemy_units.empty()) {
+            Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_units.front()->pos);
+        }
+        else {
+            Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_base_estimate);
+        }
+    }
+    else {
+        if (zerglings.size() < 35) {
+            Actions()->UnitCommand(zerglings, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
+        }
     }
 }
 
