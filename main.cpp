@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
                                  CreateComputer(Race::Terran, Difficulty::VeryHard)});
 
     coordinator.LaunchStarcraft();
-    coordinator.StartGame(sc2::kMapBelShirVestigeLE);
+    coordinator.StartGame(kMapCactusValleyLE);
 
     while (coordinator.Update())
     {

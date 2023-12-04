@@ -21,21 +21,17 @@ void BasicSc2Bot::OnGameStart()
         std::cout << "It's Gamin time" << std::endl;
     }
 
-    ideal_num_zerglings = 20;
+    ideal_num_zerglings = 25;
 
-    hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
-    Point2D map_center = FindCenterOfMap(Observation()->GetGameInfo());
-    Point2D start_location = Observation()->GetStartLocation();
-    Point2D dist_between = map_center - start_location;
-    enemy_base_estimate = map_center + dist_between;
-    if (DEBUG_MODE)
-    {
-        std::cout << "Our Base is at (" << start_location.x <<","<<start_location.y <<")"<< std::endl;
-        std::cout << "Enemy Base is at (" << enemy_base_estimate.x << "," << enemy_base_estimate.y << ")" << std::endl;
-    }
-    std::vector<PlayerInfo> all_players = Observation()->GetGameInfo().player_info;
-    for (auto player : all_players) {
-        std::cout << "There exists a player in this game playing: " << player.race_actual << std::endl;
+
+    possible_enemy_base_locations = Observation()->GetGameInfo().enemy_start_locations;
+
+    race_bases.push_back(UNIT_TYPEID::ZERG_HATCHERY);
+    race_bases.push_back(UNIT_TYPEID::PROTOSS_NEXUS);
+    race_bases.push_back(UNIT_TYPEID::TERRAN_COMMANDCENTER);
+
+    for (auto base : possible_enemy_base_locations) {
+        std::cout << "Enemy Base could be at (" << base.x << "," << base.y << ")" << std::endl;
     }
 }
 /* This function is called on each game step. */
@@ -47,8 +43,10 @@ void BasicSc2Bot::OnStep()
     TryFillGasExtractor();
     TryCreateZergQueen();
     TryResearchMetabolicBoost();
+    DetermineEnemyBase();
     HandleQueens();
     HandleZerglings();
+
 }
 
 /* This function is called when a new unit is created. */
@@ -90,6 +88,17 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
     if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY)
     {
         hatcheries.push_back(unit);
+    }
+}
+
+/* This function is called when a unit is damaged. */
+void BasicSc2Bot::OnUnitDamaged(const Unit* unit) {
+    switch (unit->unit_type.ToType())
+    {
+    case UNIT_TYPEID::ZERG_OVERLORD:
+    {
+        Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
+    }
     }
 }
 
@@ -162,8 +171,14 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     case UNIT_TYPEID::ZERG_OVERLORD:
     {
         // Move the Overlord to an enemy base's natural expansion.
-        const GameInfo &game_info = Observation()->GetGameInfo();
-        //Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVEPATROL, FindExpansionLocation(15000.0f, 20000.0f));
+        const GameInfo& game_info = Observation()->GetGameInfo();
+        if (!found_base && !possible_enemy_base_locations.empty()) {
+            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, possible_enemy_base_locations.back(), true);
+            possible_enemy_base_locations.pop_back();
+        }
+        else {
+            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
+        }
         break;
     }
     default:
@@ -295,6 +310,20 @@ void BasicSc2Bot::TryFillGasExtractor()
     }
 }
 
+void BasicSc2Bot::DetermineEnemyBase() {
+
+    if (found_base) { return; }
+
+    const Units& enemy_bases = Observation()->GetUnits(Unit::Alliance::Enemy, IsUnits(race_bases));
+    if (!enemy_bases.empty()) {
+        for (auto base : enemy_bases) {
+            enemy_base = base->pos;
+            found_base = true;
+            break;
+        }
+    }
+}
+
 /* Attempts to create a Zerg Queen as soon as the Pool is completed. */
 void BasicSc2Bot::TryCreateZergQueen()
 {
@@ -420,43 +449,37 @@ void BasicSc2Bot::HandleZerglings() {
     const Units& zerglings = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_ZERGLING));
     const Units& enemy_units = Observation()->GetUnits(sc2::Unit::Alliance::Enemy);
 
+    if (zerglings.empty()) {
+        return;
+    }
+
     // attack
     if (isLingSpeedResearched && zerglings.size() > ideal_num_zerglings) {
-        // dont know where any enemy units are
+        // have found enemy units
+        retreat = false;
         if (!enemy_units.empty()) {
             Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_units.front()->pos);
         }
-        // have found enemy units
+        // dont know where any enemy units are
         else {
-            Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_base_estimate);
+            if (found_base) {
+                Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_base);
+            }
         }
     }
     else {
         // retreat
-        if (zerglings.size() < ideal_num_zerglings - 15) {
-            Actions()->UnitCommand(zerglings, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
+        if (zerglings.size() < ideal_num_zerglings - 15 &&
+            !zerglings.front()->orders.empty() &&
+            zerglings.front()->orders.front().target_pos != Observation()->GetStartLocation()) {
+            retreat = true;
         }
     }
-}
-
-void BasicSc2Bot::TryCreateOverlordAtSupply()
-{
-    const int OVERLORD_SUPPLY_THRESHOLD = 30;
-    int currentSupply = Observation()->GetFoodUsed();
-    int supplyCap = Observation()->GetFoodCap();
-    int minerals = Observation()->GetMinerals();
-
-    // Check if current supply is at or exceeds the threshold and if supply cap allows for an Overlord
-    if (currentSupply >= OVERLORD_SUPPLY_THRESHOLD && currentSupply < supplyCap && minerals >= 100)
-    {
-        const Units& larvae = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_LARVA));
-        if (!larvae.empty())
-        {
-            Actions()->UnitCommand(larvae.front(), ABILITY_ID::TRAIN_OVERLORD);
-        }
+    if (retreat) {
+        Actions()->UnitCommand(zerglings, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation(), true);
+        retreat = false;
     }
 }
-
 
 
 /*

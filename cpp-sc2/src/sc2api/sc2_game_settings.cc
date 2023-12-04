@@ -38,6 +38,7 @@ ReplaySettings::ReplaySettings() :
 }
 
 const char* kMapBelShirVestigeLE = "Ladder/(2)Bel'ShirVestigeLE (Void).SC2Map";
+const char* kMapCactusValleyLE   = "Ladder/CactusValleyLE.SC2Map";
 const char* kMapEmpty            = "Test/Empty.SC2Map";
 const char* kMapEmptyLong        = "Test/EmptyLong.SC2Map";
 const char* kMapEmptyTall        = "Test/EmptyTall.SC2Map";

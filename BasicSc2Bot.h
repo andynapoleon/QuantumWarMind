@@ -17,6 +17,7 @@ public:
     virtual void OnStep() final;
     virtual void OnUnitCreated(const Unit *unit) final;
     virtual void OnUnitIdle(const Unit *unit) final;
+    virtual void OnUnitDamaged(const Unit* unit) final;
 
 private:
     // Private variables
@@ -24,10 +25,16 @@ private:
     std::vector<const Unit*> queens;
     std::unordered_map<const Unit*, bool> queenHasInjected;
     int queenCounter = 0;
-    Point2D enemy_base_estimate;
-    int ideal_num_zerglings;
+    std::vector<Point2D> possible_enemy_base_locations;
+    Point2D enemy_base;
+
+    size_t ideal_num_zerglings;
+    bool retreat = false;
+    bool found_base = false;
 
     std::vector<const Unit*> hatcheries;
+    std::vector<UNIT_TYPEID> race_bases;
+
 
 
     // Private game-loop functions
@@ -37,6 +44,7 @@ private:
     void TryCreateZergQueen();
     void TryFillGasExtractor();
     void TryResearchMetabolicBoost();
+    void DetermineEnemyBase();
     void SpamZerglings();
     void HandleQueens();
     void HandleZerglings();
