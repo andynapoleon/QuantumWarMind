@@ -25,6 +25,7 @@ private:
     std::unordered_map<const Unit*, bool> queenHasInjected;
     int queenCounter = 0;
     Point2D enemy_base_estimate;
+    int ideal_num_zerglings;
 
     std::vector<const Unit*> hatcheries;
 
@@ -39,13 +40,11 @@ private:
     void SpamZerglings();
     void HandleQueens();
     void HandleZerglings();
-    void TryCreateOverlordAtSupply();
 
     // Private helper functions
     bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::ZERG_DRONE);
     const Unit *FindNearestMineralPatch(const Point2D &start);
     size_t CountUnitType(UNIT_TYPEID unit_type);
-    size_t NumFullyMade(UNIT_TYPEID unit_type);
     size_t CountEggUnitsInProduction(ABILITY_ID unit_ability);
     Point2D FindNearestBuildLocationTo(sc2::UNIT_TYPEID type_);
     const Unit *FindNearestGeyser(ABILITY_ID unit_ability);

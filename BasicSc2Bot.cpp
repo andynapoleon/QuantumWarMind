@@ -20,6 +20,9 @@ void BasicSc2Bot::OnGameStart()
     {
         std::cout << "It's Gamin time" << std::endl;
     }
+
+    ideal_num_zerglings = 20;
+
     hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     Point2D map_center = FindCenterOfMap(Observation()->GetGameInfo());
     Point2D start_location = Observation()->GetStartLocation();
@@ -29,6 +32,10 @@ void BasicSc2Bot::OnGameStart()
     {
         std::cout << "Our Base is at (" << start_location.x <<","<<start_location.y <<")"<< std::endl;
         std::cout << "Enemy Base is at (" << enemy_base_estimate.x << "," << enemy_base_estimate.y << ")" << std::endl;
+    }
+    std::vector<PlayerInfo> all_players = Observation()->GetGameInfo().player_info;
+    for (auto player : all_players) {
+        std::cout << "There exists a player in this game playing: " << player.race_actual << std::endl;
     }
 }
 /* This function is called on each game step. */
@@ -42,7 +49,6 @@ void BasicSc2Bot::OnStep()
     TryResearchMetabolicBoost();
     HandleQueens();
     HandleZerglings();
-    //TryCreateOverlordAtSupply();
 }
 
 /* This function is called when a new unit is created. */
@@ -413,16 +419,21 @@ void BasicSc2Bot::HandleQueens()
 void BasicSc2Bot::HandleZerglings() {
     const Units& zerglings = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_ZERGLING));
     const Units& enemy_units = Observation()->GetUnits(sc2::Unit::Alliance::Enemy);
-    if (isLingSpeedResearched && zerglings.size() > 50) {
+
+    // attack
+    if (isLingSpeedResearched && zerglings.size() > ideal_num_zerglings) {
+        // dont know where any enemy units are
         if (!enemy_units.empty()) {
             Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_units.front()->pos);
         }
+        // have found enemy units
         else {
             Actions()->UnitCommand(zerglings, ABILITY_ID::ATTACK_ATTACK, enemy_base_estimate);
         }
     }
     else {
-        if (zerglings.size() < 35) {
+        // retreat
+        if (zerglings.size() < ideal_num_zerglings - 15) {
             Actions()->UnitCommand(zerglings, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
         }
     }

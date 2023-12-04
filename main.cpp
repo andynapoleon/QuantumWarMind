@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     BasicSc2Bot bot;
     coordinator.SetParticipants({CreateParticipant(Race::Zerg, &bot),
-                                 CreateComputer(Race::Protoss, Difficulty::VeryHard)});
+                                 CreateComputer(Race::Terran, Difficulty::VeryHard)});
 
     coordinator.LaunchStarcraft();
     coordinator.StartGame(sc2::kMapBelShirVestigeLE);
