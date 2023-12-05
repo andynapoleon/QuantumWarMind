@@ -89,10 +89,14 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
         queenHasInjected[unit] = false; // Initialize the queen's status
         queenCounter++;                 // Increment the queen counter
     }
+
+    // ALl hatcheries
     if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_HATCHERY)
     {
         hatcheries.push_back(unit);
     }
+
+    // Scout with Overlords
     if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_OVERLORD)
     {
         if (!found_base && !possible_enemy_base_locations.empty())
@@ -107,6 +111,7 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
         }
     }
 
+    // Move zerglings to 2nd base
     if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_ZERGLING)
     {
         Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, hatcheries.back()->pos);
