@@ -28,6 +28,10 @@ void BasicSc2Bot::OnGameStart()
     race_bases.push_back(UNIT_TYPEID::ZERG_HATCHERY);
     race_bases.push_back(UNIT_TYPEID::PROTOSS_NEXUS);
     race_bases.push_back(UNIT_TYPEID::TERRAN_COMMANDCENTER);
+    for (auto base : expansion_locations)
+    {
+        std::cout << "A start location is (" << base.x << "," << base.y << ")" << std::endl;
+    }
 
     for (auto base : possible_enemy_base_locations)
     {
@@ -102,6 +106,7 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
             Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
         }
     }
+
     if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_ZERGLING)
     {
         Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, hatcheries.back()->pos);
@@ -438,12 +443,12 @@ void BasicSc2Bot::SpamZerglings()
 /* This function handles the behaviour of our two queens */
 void BasicSc2Bot::HandleQueens()
 {
-    const Units &hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     if (hatcheries.empty() || hatcheries.size() < 2)
     {
         return; // EXIT if there are no hatcheries and ensure there is a hatchery at both main and explansion
     }
 
+    int iter = 0;
     for (const auto &queen : queens)
     {
         if (queen->energy < 25)
@@ -451,24 +456,24 @@ void BasicSc2Bot::HandleQueens()
             break; // skip if the queen doesnt have enough energy
         }
 
-        int queenIndex = std::distance(queens.begin(), std::find(queens.begin(), queens.end(), queen));
-        if (queenIndex == 0) // first queen
+        if (iter == 0) // first queen
         {
             if (!queenHasInjected[queen])
             {
-                InjectLarvae(queen, hatcheries.front()); // Inject at main base
+                InjectLarvae(queen, GetMainBaseHatcheryLocation()); // Inject at main base
                 queenHasInjected[queen] = true;
-                Actions()->UnitCommand(queen, ABILITY_ID::MOVE_MOVE, hatcheries[1]->pos); // Move to expansion
+                Actions()->UnitCommand(queen, ABILITY_ID::MOVE_MOVE, hatcheries.back()->pos); // Move to expansion
             }
             else
             {
-                InjectLarvae(queen, hatcheries[1]); // Continue injecting at expansion
+                InjectLarvae(queen, hatcheries.back()); // Continue injecting at expansion
             }
         }
-        else if (queenIndex == 1) // second queen
+        else if (iter == 1) // second queen
         {
-            InjectLarvae(queen, hatcheries.front()); // Always inject at main base
+            InjectLarvae(queen, GetMainBaseHatcheryLocation()); // Always inject at main base
         }
+        ++iter;
     }
 }
 
@@ -556,7 +561,7 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
     }
     else if (ability_type_for_structure == ABILITY_ID::BUILD_HATCHERY)
     {
-        Actions()->UnitCommand(unit_to_build, ability_type_for_structure, FindExpansionLocation(45.0f, 1000.0f));
+        Actions()->UnitCommand(unit_to_build, ability_type_for_structure, FindExpansionLocation(50.0f, 1000.0f));
     }
     else
     {

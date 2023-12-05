@@ -26,6 +26,7 @@ private:
     std::unordered_map<const Unit *, bool> queenHasInjected;
     int queenCounter = 0;
     std::vector<Point2D> possible_enemy_base_locations;
+    std::vector<Point2D> expansion_locations;
     Point2D enemy_base;
 
     size_t ideal_num_zerglings;
