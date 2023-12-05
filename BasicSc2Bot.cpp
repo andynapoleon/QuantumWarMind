@@ -34,6 +34,7 @@ void BasicSc2Bot::OnGameStart()
         std::cout << "Enemy Base could be at (" << base.x << "," << base.y << ")" << std::endl;
     }
 }
+
 /* This function is called on each game step. */
 void BasicSc2Bot::OnStep()
 {
@@ -78,7 +79,6 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
             std::cout << "Queen created with tag: " << unit->tag << std::endl;
         }
     }
-
     if (unit->unit_type == UNIT_TYPEID::ZERG_QUEEN)
     {
         queens.push_back(unit);
@@ -140,8 +140,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
         }
-
-        if (sum_queens >= 2)
+        if (sum_queens >= 2) // spam zerglings when queens are all created
         {
             SpamZerglings();
         }
@@ -325,9 +324,9 @@ void BasicSc2Bot::TryFillGasExtractor()
     }
 }
 
+/* Attempts to determine where the enemy base is */
 void BasicSc2Bot::DetermineEnemyBase()
 {
-
     if (found_base)
     {
         return;
@@ -418,6 +417,7 @@ void BasicSc2Bot::SpamZerglings()
         // Check if we need an Overlord (if we're about to hit the supply cap)
         if (supplyCap - supplyUsed < 2 && minerals >= 100)
         {
+            // cout << "TRAINING OVERLORD RIGHT HERE LMAOOOOOOO" << endl;
             Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
             supplyUsed += 8; // Increment used supply assuming the Overlord will be made
         }
@@ -465,6 +465,7 @@ void BasicSc2Bot::HandleQueens()
     }
 }
 
+/* This function handles the behaviour of our of all Zerglings spammed (attacking and retreating) */
 void BasicSc2Bot::HandleZerglings()
 {
     const Units &zerglings = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_ZERGLING));
@@ -725,6 +726,7 @@ sc2::Point2D BasicSc2Bot::FindExpansionLocation(float minDistanceSquared, float 
         // Calculate the buildable location by adding an offset to the target location.
         float rx = GetRandomScalar();
         float ry = GetRandomScalar();
+
         sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 7.0f, selectedMineralPatch->pos.y + ry * 7.0f);
 
         return build_location;

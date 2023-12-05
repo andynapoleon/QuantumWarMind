@@ -17,13 +17,13 @@ public:
     virtual void OnStep() final;
     virtual void OnUnitCreated(const Unit *unit) final;
     virtual void OnUnitIdle(const Unit *unit) final;
-    virtual void OnUnitDamaged(const Unit* unit) final;
+    virtual void OnUnitDamaged(const Unit *unit) final;
 
 private:
     // Private variables
     bool isLingSpeedResearched = false;
-    std::vector<const Unit*> queens;
-    std::unordered_map<const Unit*, bool> queenHasInjected;
+    std::vector<const Unit *> queens;
+    std::unordered_map<const Unit *, bool> queenHasInjected;
     int queenCounter = 0;
     std::vector<Point2D> possible_enemy_base_locations;
     Point2D enemy_base;
@@ -32,10 +32,8 @@ private:
     bool retreat = false;
     bool found_base = false;
 
-    std::vector<const Unit*> hatcheries;
+    std::vector<const Unit *> hatcheries;
     std::vector<UNIT_TYPEID> race_bases;
-
-
 
     // Private game-loop functions
     void TryBuildExtractor();
@@ -62,8 +60,8 @@ private:
     float DistanceSquared2D(const sc2::Point2D &p1, const sc2::Point2D &p2);
     const sc2::Unit *GetRandomElement(const std::vector<const sc2::Unit *> &elements);
     const Unit *GetMainBaseHatcheryLocation();
-    void InjectLarvae(const Unit* queen, const Unit* hatchery);
-    bool IsAtMainBase(const Unit* unit);
+    void InjectLarvae(const Unit *queen, const Unit *hatchery);
+    bool IsAtMainBase(const Unit *unit);
 };
 
 #endif
