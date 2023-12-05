@@ -89,6 +89,23 @@ void BasicSc2Bot::OnUnitCreated(const Unit *unit)
     {
         hatcheries.push_back(unit);
     }
+    if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_OVERLORD)
+    {
+        if (!found_base && !possible_enemy_base_locations.empty())
+        {
+            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, possible_enemy_base_locations.back(), true);
+            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation(), true);
+            possible_enemy_base_locations.pop_back();
+        }
+        else
+        {
+            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
+        }
+    }
+    if (unit->unit_type == sc2::UNIT_TYPEID::ZERG_ZERGLING)
+    {
+        Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, hatcheries.back()->pos);
+    }
 }
 
 /* This function is called when a unit is damaged. */
