@@ -9,23 +9,23 @@
 
 int main(int argc, char *argv[])
 {
-    // RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Terran);
-    Coordinator coordinator;
-    coordinator.LoadSettings(argc, argv);
-    coordinator.SetFullScreen(false);
-    coordinator.SetRealtime(false);
+    RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Zerg);
+    // Coordinator coordinator;
+    // coordinator.LoadSettings(argc, argv);
+    // coordinator.SetFullScreen(false);
+    // coordinator.SetRealtime(false);
 
-    BasicSc2Bot bot;
-    coordinator.SetParticipants({CreateParticipant(Race::Zerg, &bot),
-                                 CreateComputer(Race::Terran, Difficulty::VeryHard)});
+    // BasicSc2Bot bot;
+    // coordinator.SetParticipants({CreateParticipant(Race::Zerg, &bot),
+    //                              CreateComputer(Race::Terran, Difficulty::VeryHard)});
 
-    coordinator.LaunchStarcraft();
-    coordinator.StartGame(kMapCactusValleyLE);
+    // coordinator.LaunchStarcraft();
+    // coordinator.StartGame(kMapCactusValleyLE);
 
-    while (coordinator.Update())
-    {
-        // Slowing down gamespeed so I can see what's happening
-        // sc2::SleepFor(15);
-    }
+    // while (coordinator.Update())
+    // {
+    //     // Slowing down gamespeed so I can see what's happening
+    //     // sc2::SleepFor(15);
+    // }
     return 0;
 }

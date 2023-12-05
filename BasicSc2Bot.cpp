@@ -136,6 +136,11 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
         }
+        else if (usedSupply >= 30 && sum_overlords < 4) // when we reach supply 30 we need to make an Overlord
+        {
+            Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
+            cout << "OVERLORD TRAINED AT 30 HERE" << endl;
+        }
         else if (sum_drones < 17) // cap # of drones at 17 during prep phase (before queens)
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_DRONE);
@@ -415,13 +420,13 @@ void BasicSc2Bot::SpamZerglings()
     for (const auto &larva : larvae)
     {
         // Check if we need an Overlord (if we're about to hit the supply cap)
-        if (supplyCap - supplyUsed < 2 && minerals >= 100)
-        {
-            // cout << "TRAINING OVERLORD RIGHT HERE LMAOOOOOOO" << endl;
-            Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
-            supplyUsed += 8; // Increment used supply assuming the Overlord will be made
-        }
-        else if (minerals >= 50) // Check if we have enough minerals for a Zergling
+        // if (supplyCap - supplyUsed < 2 && minerals >= 100)
+        // {
+        //     // cout << "TRAINING OVERLORD RIGHT HERE LMAOOOOOOO" << endl;
+        //     // Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
+        //     supplyUsed += 8; // Increment used supply assuming the Overlord will be made
+        // }
+        if (minerals >= 50) // Check if we have enough minerals for a Zergling
         {
             Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_ZERGLING);
         }
