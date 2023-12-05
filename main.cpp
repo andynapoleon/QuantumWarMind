@@ -10,10 +10,10 @@
 int main(int argc, char *argv[])
 {
     RunBot(argc, argv, new BasicSc2Bot(), sc2::Race::Zerg);
-    // Coordinator coordinator;
+    Coordinator coordinator;
     // coordinator.LoadSettings(argc, argv);
     // coordinator.SetFullScreen(false);
-    // coordinator.SetRealtime(false);
+    coordinator.SetRealtime(true);
 
     // BasicSc2Bot bot;
     // coordinator.SetParticipants({CreateParticipant(Race::Zerg, &bot),
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     // while (coordinator.Update())
     // {
     //     // Slowing down gamespeed so I can see what's happening
-    //     // sc2::SleepFor(15);
+    //     sc2::SleepFor(15);
     // }
     return 0;
 }
