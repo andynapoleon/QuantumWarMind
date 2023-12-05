@@ -729,10 +729,28 @@ sc2::Point2D BasicSc2Bot::FindExpansionLocation(float minDistanceSquared, float 
         const sc2::Unit *selectedMineralPatch = GetRandomElement(validMineralPatches);
 
         // Calculate the buildable location by adding an offset to the target location.
-        float rx = GetRandomScalar();
-        float ry = GetRandomScalar();
+        float rx;
+        float ry;
 
-        sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 7.0f, selectedMineralPatch->pos.y + ry * 7.0f);
+        if (selectedMineralPatch->pos.y > FindCenterOfMap(gameInfo).y)
+        {
+            ry = -GetRandomFraction();
+        }
+        else
+        {
+            ry = GetRandomFraction();
+        }
+
+        if (selectedMineralPatch->pos.x > FindCenterOfMap(gameInfo).x)
+        {
+            rx = -GetRandomFraction();
+        }
+        else
+        {
+            rx = GetRandomFraction();
+        }
+
+        sc2::Point2D build_location = Point2D(selectedMineralPatch->pos.x + rx * 9.0f, selectedMineralPatch->pos.y + ry * 9.0f);
 
         return build_location;
     }
