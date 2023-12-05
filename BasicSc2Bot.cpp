@@ -170,8 +170,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     }
     case UNIT_TYPEID::ZERG_DRONE:
     {
-        // Get all our hatcheries
-        const Units &hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     sc2:
         Point3D target;
         bool full = true;
@@ -204,17 +202,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     }
     case UNIT_TYPEID::ZERG_OVERLORD:
     {
-        // Move the Overlord to an enemy base's natural expansion.
-        const GameInfo &game_info = Observation()->GetGameInfo();
-        if (!found_base && !possible_enemy_base_locations.empty())
-        {
-            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, possible_enemy_base_locations.back(), true);
-            possible_enemy_base_locations.pop_back();
-        }
-        else
-        {
-            Actions()->UnitCommand(unit, ABILITY_ID::MOVE_MOVE, Observation()->GetStartLocation());
-        }
         break;
     }
     default:
@@ -370,7 +357,6 @@ void BasicSc2Bot::DetermineEnemyBase()
 void BasicSc2Bot::TryCreateZergQueen()
 {
     // Make queens only in the first hatchery
-    const Units &hatcheries = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::ZERG_HATCHERY));
     const Unit *mainHatchery = GetMainBaseHatcheryLocation(); // get main hatchery
 
     // Check for queen creation process going on in queue
@@ -437,12 +423,11 @@ void BasicSc2Bot::SpamZerglings()
     for (const auto &larva : larvae)
     {
         // Check if we need an Overlord (if we're about to hit the supply cap)
-        // if (supplyCap - supplyUsed < 2 && minerals >= 100)
-        // {
-        //     // cout << "TRAINING OVERLORD RIGHT HERE LMAOOOOOOO" << endl;
-        //     // Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
-        //     supplyUsed += 8; // Increment used supply assuming the Overlord will be made
-        // }
+        if (supplyCap - supplyUsed < 6 && minerals >= 100 && CountEggUnitsInProduction(ABILITY_ID::TRAIN_OVERLORD) < 1)
+        {
+            Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_OVERLORD);
+            supplyUsed += 8; // Increment used supply assuming the Overlord will be made
+        }
         if (minerals >= 50) // Check if we have enough minerals for a Zergling
         {
             Actions()->UnitCommand(larva, ABILITY_ID::TRAIN_ZERGLING);
@@ -463,7 +448,7 @@ void BasicSc2Bot::HandleQueens()
     {
         if (queen->energy < 25)
         {
-            continue; // skip if the queen doesnt have enough energy
+            break; // skip if the queen doesnt have enough energy
         }
 
         int queenIndex = std::distance(queens.begin(), std::find(queens.begin(), queens.end(), queen));
