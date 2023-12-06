@@ -37,6 +37,11 @@ void BasicSc2Bot::OnGameStart()
     {
         std::cout << "Enemy Base could be at (" << base.x << "," << base.y << ")" << std::endl;
     }
+
+    if (possible_enemy_base_locations.size() == 1) {
+        enemy_base = possible_enemy_base_locations.front();
+        found_base = true;
+    }
 }
 
 /* This function is called on each game step. */
