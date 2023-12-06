@@ -177,5 +177,6 @@ static void RunBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 	coordinator.SetTimeoutMS(10000);
 	while (coordinator.Update())
 	{
+		// SleepFor(15);
 	}
 }

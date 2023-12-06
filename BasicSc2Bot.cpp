@@ -142,7 +142,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
     {
     case UNIT_TYPEID::ZERG_LARVA:
     {
-
         // Get the # of supply used and # of drones, overlords, and queens on field + in production
         size_t sum_queens = 0;
         size_t usedSupply = Observation()->GetFoodUsed();
@@ -166,7 +165,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit *unit)
         else if (usedSupply >= 30 && sum_overlords < 4) // when we reach supply 30 we need to make an Overlord
         {
             Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_OVERLORD);
-            cout << "OVERLORD TRAINED AT 30 HERE" << endl;
         }
         else if (sum_drones < 17) // cap # of drones at 17 during prep phase (before queens)
         {
@@ -659,15 +657,17 @@ const Unit *BasicSc2Bot::FindNearestGeyser(ABILITY_ID unit_ability)
 
     if (unit_ability == ABILITY_ID::BUILD_EXTRACTOR)
     {
-        const Units &geysers = Observation()->GetUnits(Unit::Alliance::Neutral, IsUnit(UNIT_TYPEID::NEUTRAL_VESPENEGEYSER));
+        const Units &geysers = Observation()->GetUnits(Unit::Alliance::Neutral);
         const Unit *closest_geyser = geysers.front();
         for (const auto &geyser : geysers)
         {
-            if (Distance3D(hatchery->pos, closest_geyser->pos) > Distance3D(hatchery->pos, geyser->pos))
+            if (Distance3D(hatchery->pos, closest_geyser->pos) > Distance3D(hatchery->pos, geyser->pos) && (geyser->unit_type == 343 || geyser->unit_type == 342))
             {
                 closest_geyser = geyser;
             }
         }
+        cout << closest_geyser->unit_type << endl;
+
         return closest_geyser;
     }
 
