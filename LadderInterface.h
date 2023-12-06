@@ -23,31 +23,31 @@ static sc2::Difficulty GetDifficultyFromString(const std::string &InDifficulty)
 	{
 		return sc2::Difficulty::Hard;
 	}
-if (InDifficulty == "HardVeryHard")
-{
-	return sc2::Difficulty::HardVeryHard;
-}
-if (InDifficulty == "VeryHard")
-{
-	return sc2::Difficulty::VeryHard;
-}
-if (InDifficulty == "CheatVision")
-{
-	return sc2::Difficulty::CheatVision;
-}
-if (InDifficulty == "CheatMoney")
-{
-	return sc2::Difficulty::CheatMoney;
-}
-if (InDifficulty == "CheatInsane")
-{
-	return sc2::Difficulty::CheatInsane;
+	if (InDifficulty == "HardVeryHard")
+	{
+		return sc2::Difficulty::HardVeryHard;
+	}
+	if (InDifficulty == "VeryHard")
+	{
+		return sc2::Difficulty::VeryHard;
+	}
+	if (InDifficulty == "CheatVision")
+	{
+		return sc2::Difficulty::CheatVision;
+	}
+	if (InDifficulty == "CheatMoney")
+	{
+		return sc2::Difficulty::CheatMoney;
+	}
+	if (InDifficulty == "CheatInsane")
+	{
+		return sc2::Difficulty::CheatInsane;
+	}
+
+	return sc2::Difficulty::Easy;
 }
 
-return sc2::Difficulty::Easy;
-}
-
-static sc2::Race GetRaceFromString(const std::string & RaceIn)
+static sc2::Race GetRaceFromString(const std::string &RaceIn)
 {
 	std::string race(RaceIn);
 	std::transform(race.begin(), race.end(), race.begin(), ::tolower);
@@ -87,23 +87,27 @@ struct ConnectionOptions
 static void ParseArguments(int argc, char *argv[], ConnectionOptions &connect_options)
 {
 	sc2::ArgParser arg_parser(argv[0]);
-	arg_parser.AddOptions({
-		{ "-g", "--GamePort", "Port of client to connect to", false },
-		{ "-o", "--StartPort", "Starting server port", false },
-		{ "-l", "--LadderServer", "Ladder server address", false },
-		{ "-c", "--ComputerOpponent", "If we set up a computer oppenent" },
-		{ "-a", "--ComputerRace", "Race of computer oppent"},
-		{ "-d", "--ComputerDifficulty", "Difficulty of computer oppenent"},
-		{ "-m", "--Map", "Map to play on against computer opponent", },
-		{ "-x", "--OpponentId", "PlayerId of opponent"}
-		});
+	arg_parser.AddOptions({{"-g", "--GamePort", "Port of client to connect to", false},
+						   {"-o", "--StartPort", "Starting server port", false},
+						   {"-l", "--LadderServer", "Ladder server address", false},
+						   {"-c", "--ComputerOpponent", "If we set up a computer oppenent"},
+						   {"-a", "--ComputerRace", "Race of computer oppent"},
+						   {"-d", "--ComputerDifficulty", "Difficulty of computer oppenent"},
+						   {
+							   "-m",
+							   "--Map",
+							   "Map to play on against computer opponent",
+						   },
+						   {"-x", "--OpponentId", "PlayerId of opponent"}});
 	arg_parser.Parse(argc, argv);
 	std::string GamePortStr;
-	if (arg_parser.Get("GamePort", GamePortStr)) {
+	if (arg_parser.Get("GamePort", GamePortStr))
+	{
 		connect_options.GamePort = atoi(GamePortStr.c_str());
 	}
 	std::string StartPortStr;
-	if (arg_parser.Get("StartPort", StartPortStr)) {
+	if (arg_parser.Get("StartPort", StartPortStr))
+	{
 		connect_options.StartPort = atoi(StartPortStr.c_str());
 	}
 	arg_parser.Get("LadderServer", connect_options.ServerAddress);
@@ -126,7 +130,8 @@ static void ParseArguments(int argc, char *argv[], ConnectionOptions &connect_op
 		{
 			connect_options.Map = map;
 		}
-		else {
+		else
+		{
 			connect_options.Map = kDefaultMap;
 		}
 	}
@@ -145,21 +150,21 @@ static void RunBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 	sc2::Coordinator coordinator;
 
 	int num_agents;
-	if (Options.ComputerOpponent) {
+	if (Options.ComputerOpponent)
+	{
 		num_agents = 1;
-		coordinator.SetParticipants({
-			CreateParticipant(race, Agent),
-			CreateComputer(Options.ComputerRace, Options.ComputerDifficulty)
-			});
+		coordinator.SetParticipants({CreateParticipant(race, Agent),
+									 CreateComputer(Options.ComputerRace, Options.ComputerDifficulty)});
 		coordinator.LoadSettings(1, argv);
 		coordinator.LaunchStarcraft();
 		coordinator.StartGame(Options.Map);
 	}
-	else {
+	else
+	{
 		num_agents = 2;
 		coordinator.SetParticipants({
 			CreateParticipant(race, Agent),
-			});
+		});
 		// Start the game.
 		std::cout << "Connecting to port " << Options.GamePort << std::endl;
 		coordinator.Connect(Options.GamePort);
@@ -170,6 +175,7 @@ static void RunBot(int argc, char *argv[], sc2::Agent *Agent, sc2::Race race)
 	}
 
 	coordinator.SetTimeoutMS(10000);
-	while (coordinator.Update()) {
+	while (coordinator.Update())
+	{
 	}
 }
