@@ -1,5 +1,5 @@
 # QuantumWarMind SC2 Bot
-A SC2 Bot built in CMPUT 350 at UAlberta.
+A SC2 Bot built in CMPUT 350 at UAlberta.  
 
 # Developer Install / Compile Instructions
 ## Requirements
